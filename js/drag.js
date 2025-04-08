@@ -3,6 +3,7 @@ function initDesktopManager(id) {
 
     function init() {
         const desktop = document.getElementById(id);
+        console.log("初始化获取ID >>>>"+id)
         if (!desktop) {
             console.error('未找到指定 ID 的桌面元素');
             return;
@@ -15,6 +16,7 @@ function initDesktopManager(id) {
         let debounceTimer;
         let hoverTimer = null;
         let hoveredElement = null;
+
 
         const THRESHOLD = 20; // 移动阈值
 
@@ -38,18 +40,22 @@ function initDesktopManager(id) {
             draggedApp.style.transition = "none";
             draggedApp.style.opacity = "0.8";
 
+            // 隐藏删除按钮
+            document.querySelectorAll(".delbook").forEach(delIcon => {
+                delIcon.style.display = 'none';
+            });
+
             document.addEventListener("mousemove", handleMove, false);
             document.addEventListener("touchmove", handleMove, {passive: false});
             document.addEventListener("mouseup", handleEnd, false);
             document.addEventListener("touchend", handleEnd, false);
-
-            rafId = requestAnimationFrame(() => moveAt(touch.clientX, touch.clientY));
         }
 
         function handleMove(e) {
-            if (!draggedApp) return;
+            if (!draggedApp || !longPressActivated) return;
             e.preventDefault();
-
+            console.log("长按状态  >>> "+longPressActivated);
+            hide();
             const touch = e.touches ? e.touches[0] : e;
 
             // 获取当前触摸点的位置
@@ -58,39 +64,22 @@ function initDesktopManager(id) {
 
             // 计算移动量
             const deltaX = currentX - startX;
-            const deltaY = currentY - startY;
+            const deltaY = currentY - startY; // 虽然计算了 deltaY，但不会使用它
 
-            // 判断主要移动方向
+            // 判断主要移动方向（只判断左右）
             let direction = null;
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (Math.abs(deltaX) > THRESHOLD) {
-                    direction = deltaX > 0 ? 'right' : 'left';
-                }
-            } else {
-                if (Math.abs(deltaY) > THRESHOLD) {
-                    direction = deltaY > 0 ? 'down' : 'up';
-                }
+            if (Math.abs(deltaX) > THRESHOLD) {
+                direction = deltaX > 0 ? 'right' : 'left';
             }
 
             if (direction) {
                 // 根据方向执行相应的操作
-                switch(direction) {
+                switch (direction) {
                     case 'left':
-                        switchPage('next');
-                        console.log("向左")
+                        console.log("向左");
                         break;
                     case 'right':
-                        console.log("向右")
-                        switchPage('prev');
-                        break;
-                    // 您可以根据需要添加上下滑动的操作
-                    case 'up':
-                        console.log("向上")
-                        // 上滑操作
-                        break;
-                    case 'down':
-                        console.log("向下")
-                        // 下滑操作
+                        console.log("向右");
                         break;
                 }
             }
@@ -117,27 +106,37 @@ function initDesktopManager(id) {
             }, 50); // Debounce time
         }
 
-
-        // 切换页面的函数
-        function switchPage(direction) {
-            const swiper = document.querySelector('.swiper-container').swiper; // 获取 Swiper 实例
-            if (direction === 'prev') {
-                swiper.slidePrev();
-            } else if (direction === 'next') {
-                swiper.slideNext();
-            }
-        }
-
-
-        function handleEnd() {
+        function handleEnd(e) {
             if (!draggedApp) return;
-
+            // 计算最终移动距离
+            let endX, endY;
+            if (e.touches) { // 触摸事件
+                endX = e.changedTouches[0].clientX;
+                endY = e.changedTouches[0].clientY;
+            } else { // 鼠标事件
+                endX = e.clientX;
+                endY = e.clientY;
+            }
+            const deltaX = Math.abs(endX - startX);
+            const deltaY = Math.abs(endY - startY);
+            const MOVE_THRESHOLD = 50; // 最小移动阈值（像素）
+            // 仅在有效移动时输出日志
+            if (deltaX >= MOVE_THRESHOLD || deltaY >= MOVE_THRESHOLD) {
+                console.log("结束 >>>");
+                hide();
+                // 更新状态
+                longPressActivated = false;
+            }else {
+                show();
+                // 更新状态
+                longPressActivated = true;
+            }
             cancelAnimationFrame(rafId);
             clearTimeout(hoverTimer);
             hoveredElement = null;
             draggedApp.style.zIndex = "";
             draggedApp.style.transform = "";
-            draggedApp.style.transition = "transform 0.2s ease";
+            draggedApp.style.transition = "transform 0.23s ease";
             draggedApp.style.opacity = "1";
 
             document.querySelectorAll(".collision").forEach(el => el.classList.remove("collision"));
@@ -151,14 +150,12 @@ function initDesktopManager(id) {
             saveLayout();
         }
 
+
         function moveAt(clientX, clientY) {
             if (!draggedApp) return;
             const deltaX = clientX - startX;
             const deltaY = clientY - startY;
-            const gridSize = 0.1;
-            const alignedX = Math.round(deltaX / gridSize) * gridSize;
-            const alignedY = Math.round(deltaY / gridSize) * gridSize;
-            draggedApp.style.transform = `translate3d(${alignedX}px, ${alignedY}px, 0)`;
+            draggedApp.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
         }
 
         function detectCollision(draggedElement, direction, elements, callback) {
@@ -186,16 +183,7 @@ function initDesktopManager(id) {
                         if (draggedRect.left > elementRect.left + (elementRect.width / 2)) {
                             hasPassedCenter = true;
                         }
-                    } else if (direction === 'up') {
-                        if (draggedRect.bottom < elementRect.top + (elementRect.height / 2)) {
-                            hasPassedCenter = true;
-                        }
-                    } else if (direction === 'down') {
-                        if (draggedRect.top > elementRect.top + (elementRect.height / 2)) {
-                            hasPassedCenter = true;
-                        }
                     }
-
 
                     // 如果超过阈值，触发交换
                     if (hasPassedCenter) {
@@ -218,8 +206,8 @@ function initDesktopManager(id) {
                     const thresholdY = elementRect.height * 0.5;
 
                     const isCenterProximity = deltaX <= thresholdX && deltaY <= thresholdY;
-                    console.log("中心位置判断 :"+isCenterProximity)
-                    if (isCenterProximity){
+                    console.log("中心位置判断 :" + isCenterProximity)
+                    if (isCenterProximity) {
                         closestElement = element;
                     }
                 }
@@ -231,7 +219,7 @@ function initDesktopManager(id) {
                     hoveredElement = closestElement;
                     hoverTimer = setTimeout(() => {
                         callback(hoveredElement);
-                    }, 600);
+                    }, 800);
                 }
                 closestElement.classList.add("collision");
                 console.log("存在碰撞元素，等待合并操作");
@@ -254,6 +242,7 @@ function initDesktopManager(id) {
         }
 
         function createFolder(apps) {
+            console.log("创建文件夹");
             const folder = document.createElement("div");
             folder.classList.add("folder");
             folder.innerHTML = `
@@ -276,7 +265,11 @@ function initDesktopManager(id) {
                 folderIcon.appendChild(appIcon);
                 folderContent.appendChild(clonedApp);
                 folderPopup.appendChild(clonedApp.cloneNode(true));
-                app.parentNode.removeChild(app);
+
+                // 检查元素是否还在文档中，如果存在则移除
+                if (document.contains(app)) {
+                    app.parentNode.removeChild(app);
+                }
             });
 
             desktop.appendChild(folder);
@@ -308,7 +301,6 @@ function initDesktopManager(id) {
         }
 
 
-
         function swapElements(elem1, elem2) {
             const rect1 = elem1.getBoundingClientRect();
             const rect2 = elem2.getBoundingClientRect();
@@ -320,31 +312,67 @@ function initDesktopManager(id) {
             tempElem.parentNode.insertBefore(elem2, tempElem);
             tempElem.parentNode.removeChild(tempElem);
 
+            // 在交换元素后立即更新所有app的位置信息
+            updateAppPositions();
+
             // 计算偏移量
             const deltaX1 = rect2.left - rect1.left;
             const deltaY1 = rect2.top - rect1.top;
             const deltaX2 = rect1.left - rect2.left;
             const deltaY2 = rect1.top - rect2.top;
 
-            // 应用动画
+            // 设置初始状态
             elem1.style.transform = `translate3d(${deltaX1}px, ${deltaY1}px, 0)`;
             elem2.style.transform = `translate3d(${deltaX2}px, ${deltaY2}px, 0)`;
+            elem1.style.transition = "none";
+            elem2.style.transition = "none";
 
-            elem1.style.transition = "transform 0.2s ease";
-            elem2.style.transition = "transform 0.2s ease";
+            // 强制重绘
+            elem1.offsetHeight;
+            elem2.offsetHeight;
 
+            // 应用动画
             requestAnimationFrame(() => {
+                elem1.style.transition = "transform 0.3s ease";
+                elem2.style.transition = "transform 0.3s ease";
                 elem1.style.transform = "";
                 elem2.style.transform = "";
             });
 
+            // 监听动画结束事件
+            function onTransitionEnd() {
+                elem1.style.transition = "";
+                elem2.style.transition = "";
+                elem1.removeEventListener("transitionend", onTransitionEnd);
+            }
+            elem1.addEventListener("transitionend", onTransitionEnd);
+
             // 重置拖动状态
             draggedApp = null;
+            longPressActivated = false;
+            hide();
+        }
+
+        function updateAppPositions() {
+            const apps = document.querySelectorAll(".app");
+            apps.forEach((app) => {
+                app.rect = app.getBoundingClientRect();
+            });
         }
 
 
 
-
+        // 隐藏
+        function hide() {
+            document.querySelectorAll(".delbook").forEach(delIcon => {
+                delIcon.style.display = 'none';
+            });
+        }
+        function show() {
+            document.querySelectorAll(".delbook").forEach(delIcon => {
+                delIcon.style.display = 'block';
+            });
+        }
 
 
         function handleFolderInteraction(e) {
@@ -414,10 +442,14 @@ function initDesktopManager(id) {
             localStorage.setItem("desktopLayout", JSON.stringify(layout));
         }
     }
+    const api = {
+        init: init // 将init函数添加到外部接口
+    };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    // if (document.readyState === 'loading') {
+    //     document.addEventListener('DOMContentLoaded', init);
+    // } else {
+    //     init();
+    // }
+    return api;
 }
