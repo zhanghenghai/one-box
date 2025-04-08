@@ -1,3 +1,147 @@
+/* 基础样式 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Swiper 容器样式 */
+.swiper-container {
+    width: 100%;
+    height: 100vh;
+}
+
+/* 页面布局样式 */
+.page-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+}
+
+.gradient-box {
+    background: linear-gradient(to right bottom, #ff6666, #ff7e7e);
+    width: 50%;
+    height: 130px;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.footer-content {
+    background-color: #fff;
+    text-align: center;
+    transform: translateY(-10%);
+    box-sizing: border-box;
+}
+
+/* 应用图标样式 */
+.app-grid {
+    min-height: 70px;
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.app-item {
+    height: 100%;
+    flex: 0 0 25%;
+    margin-bottom: 5%;
+}
+
+.app-icon {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+}
+
+.app-text {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 300px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.modal-buttons b {
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#cancel-btn {
+    background-color: #f5f5f5;
+}
+
+#confirm-btn {
+    background-color: #ff6666;
+    color: white;
+}
+
+/* 删除按钮样式 */
+.delbook {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background-color: #ff4444;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+}
+
+/* 动画效果 */
+.fade-out {
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .app-item {
+        flex: 0 0 33.33%;
+    }
+    
+    .gradient-box {
+        width: 80%;
+    }
+}
+
 html,
 body {
     height: 100%;
@@ -6,11 +150,24 @@ body {
     box-sizing: border-box;
 }
 
-
-
-.swiper-container {
-    width: 100%;
+/*左侧栏*/
+.left-side{
+    /*display: none;*/
     height: 100%;
+    width: 80px;
+    background: #e80c67;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.right-side{
+    /*display: none;*/
+    height: 100%;
+    width: 80px;
+    background: #e80c67;
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 .swiper-slide {
@@ -51,28 +208,10 @@ body {
     padding: 7px 0 10px;
 }
 
-/* 图片 */
-.delbook {
-    top: -5px;
-    right: -5px;
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    background: url(../image/img/delete.png) no-repeat center;
-    background-size: 18px;
-    animation: scale .3s;
-    transition: transform .3s;
-}
-
-.delbook.animation {
-    transform: scale(0);
-}
-
 /* 列表 */
 .list {
     background-color: transparent;
 }
-
 
 .parent {
     height: 100%;
@@ -93,7 +232,6 @@ body {
     align-items: center;
 }
 
-
 /*二级页面*/
 .twoParent{
     height: 100%;
@@ -113,77 +251,12 @@ body {
     margin: 5%;
 }
 
-/* 弹窗 */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 9999;
-    display: none;
-}
-
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-button {
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: #000;
-    font-size: 16px;
-    cursor: pointer;
-    flex: 1;
-}
-
-#cancel-btn {
-    background-color: #FFFFFF;
-    flex: 0 0 50%;
-}
-
-#confirm-btn {
-    background-color: #FFFFFF;
-    flex: 0 0 50%;
-}
-
-/**
-* 列表动画
-* from: http://www.jq22.com/demo/animate201804130121/
-*/
-@keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* 书签排序幽灵方块 */
 .ghost {
     opacity: .1 !important;
 }
 
 /* ================================================================ 二级页面开始 ============================================================================== */
-
-
 
 :root {
     --bg: #fff;
@@ -248,8 +321,6 @@ button {
     text-shadow: 0 0 4px var(--white);
     padding: 7px 0 10px;
 }
-
-
 
 /* 背景页面 */
 .page-addbook,.page-search,.page-settings{position:absolute;left:0;;width:100%;height:auto;top: 50%;transform: translateY(-50%);}
@@ -1036,13 +1107,8 @@ button {
     opacity: .1 !important;
 }
 
-
-
-
 /* ==================================================================== 二级页面结束 ======================================================================= */
 /*-----------------------------------------------------------*/
-
-
 
 #desktop {
     display: grid;
@@ -1070,8 +1136,6 @@ button {
 
 .app-icon,
 .folder-icon {
-
-
     width: 50px;
     height: 50px;
     border-radius: 20%;
@@ -1081,17 +1145,8 @@ button {
     background-repeat: no-repeat;
     overflow: visible;
     position: relative;
-
-    /*width: 60px;*/
-    /*height: 60px;*/
-    /*background-color: #ffffff;*/
-    /*border-radius: 15px;*/
-    /*display: flex;*/
     justify-content: center;
     align-items: center;
-    /*font-size: 24px;*/
-    /*font-weight: bold;*/
-    /*color: #ffffff;*/
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 

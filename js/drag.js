@@ -242,7 +242,6 @@ function initDesktopManager(id) {
         }
 
         function createFolder(apps) {
-            console.log("创建文件夹");
             const folder = document.createElement("div");
             folder.classList.add("folder");
             folder.innerHTML = `
@@ -265,11 +264,7 @@ function initDesktopManager(id) {
                 folderIcon.appendChild(appIcon);
                 folderContent.appendChild(clonedApp);
                 folderPopup.appendChild(clonedApp.cloneNode(true));
-
-                // 检查元素是否还在文档中，如果存在则移除
-                if (document.contains(app)) {
-                    app.parentNode.removeChild(app);
-                }
+                app.parentNode.removeChild(app);
             });
 
             desktop.appendChild(folder);
