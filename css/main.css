@@ -1156,9 +1156,12 @@ body {
 
 .folder-icon .app-icon {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    font-size: 10px;
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .app-name,
@@ -1242,4 +1245,21 @@ body {
 .folder-popup.open {
     opacity: 1;
     transform: scale(1);
+}
+
+/* 添加可移动状态的样式 */
+.app.movable, .folder.movable {
+    cursor: move;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app.movable:hover, .folder.movable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.app.movable:active, .folder.movable:active {
+    transform: scale(0.95);
 }
