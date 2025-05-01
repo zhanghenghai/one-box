@@ -1,5 +1,10 @@
 let longPressActivated = false;
 
+// 添加编辑模式背景
+const editModeBg = document.createElement('div');
+editModeBg.className = 'edit-mode-bg';
+document.body.appendChild(editModeBg);
+
 // 全局文件夹处理函数
 function openFolder(folder) {
     const folderPopup = folder.querySelector(".folder-popup");
@@ -271,36 +276,105 @@ $(function () {
                 this.bind(i);
             }
 
-            const swiper = new Swiper('.swiper-container', {
+            let swiper;  // Define swiper as a variable accessible within the scope
+            
+            swiper = new Swiper('.swiper-container', {
                 pagination: {
                     el: ".swiper-pagination",
                     dynamicBullets: true,
+                },
+                allowTouchMove: true,
+                on: {
+                    touchStart: function(swiper, event) {
+                        if (longPressActivated) {
+                            swiper.allowTouchMove = false;
+                        } else {
+                            swiper.allowTouchMove = true;
+                        }
+                    },
+                    touchMove: function(swiper, event) {
+                        // 额外检查，确保在长按状态下禁用滑动
+                        if (longPressActivated) {
+                            swiper.allowTouchMove = false;
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                    }
                 }
             });
         },
         bind: function (i) {
             const desktopManager = initDesktopManager(`one${i}`);
             $('.parent').longPress(function () {
-                $('.delbook').show();
+                // 激活编辑模式背景
+                editModeBg.classList.add('active');
+                
+                // 显示删除按钮并添加动画类
                 $('.app').each(function () {
                     var $appIcon = $(this).find(".app-icon");
                     if ($appIcon.find(".delbook").length === 0) {
                         $appIcon.prepend('<div class="delbook"></div>');
                     }
+                    $appIcon.find(".delbook").addClass('show');
                 });
+                
+                // 添加可移动类
                 $('.app, .folder').addClass('movable');
+                
                 longPressActivated = true;
+                
+                // 立即禁用Swiper导航
+                if (typeof swiper !== 'undefined') {
+                    swiper.allowTouchMove = false;
+                    swiper.params.touchReleaseOnEdges = false;
+                    swiper.params.threshold = 999; // 设置一个非常高的阈值，实际上禁用了滑动
+                    swiper.update(); // 更新Swiper配置
+                }
+                
+                // 阻止页面滚动
+                document.body.style.overflow = 'hidden';
+                
                 desktopManager.init();
             });
+            
+            // 在触摸开始时额外检查
+            $(document).on('touchstart', function(e) {
+                if (longPressActivated) {
+                    // 如果在编辑模式下，阻止所有非APP元素的默认触摸行为
+                    if (!$(e.target).closest('.app, .folder, .delbook').length) {
+                        e.preventDefault();
+                    }
+                }
+            });
+            
             $(document).on('touchstart', '.delbook', function (e) {
                 e.stopPropagation();
                 $(this).closest('.app').remove();
             });
+            
             $(document).on('click', function (evt) {
                 if (!$(evt.target).closest('.appClass').length && longPressActivated) {
-                    $('.delbook').hide();
+                    // 移除删除按钮的显示状态
+                    $('.delbook').removeClass('show');
+                    
+                    // 移除编辑模式背景
+                    editModeBg.classList.remove('active');
+                    
+                    // 移除可移动类
                     $('.app, .folder').removeClass('movable');
+                    
                     longPressActivated = false;
+                    
+                    // 重新启用Swiper导航
+                    if (typeof swiper !== 'undefined') {
+                        swiper.allowTouchMove = true;
+                        swiper.params.touchReleaseOnEdges = true;
+                        swiper.params.threshold = 0; // 恢复正常阈值
+                        swiper.update(); // 更新Swiper配置
+                    }
+                    
+                    // 恢复页面滚动
+                    document.body.style.overflow = '';
                 }
             });
         }
@@ -366,6 +440,8 @@ $(function () {
                 }
                 
                 e.preventDefault();
+                e.stopPropagation(); // 阻止冒泡，防止触发swiper
+                
                 draggedApp = target;
                 const touch = e.touches ? e.touches[0] : e;
                 startX = touch.clientX;
@@ -383,12 +459,24 @@ $(function () {
                 document.addEventListener("touchmove", handleMove, {passive: false});
                 document.addEventListener("mouseup", handleEnd, false);
                 document.addEventListener("touchend", handleEnd, false);
+                
+                // 确保Swiper被禁用
+                if (typeof swiper !== 'undefined') {
+                    swiper.allowTouchMove = false;
+                    swiper.update();
+                }
             }
 
             function handleMove(e) {
                 if (!draggedApp || !longPressActivated) return;
                 e.preventDefault();
                 e.stopPropagation(); // 阻止事件冒泡，防止触发swiper切换
+                
+                // 再次确保Swiper被禁用
+                if (typeof swiper !== 'undefined') {
+                    swiper.allowTouchMove = false;
+                }
+                
                 hide();
                 const touch = e.touches ? e.touches[0] : e;
                 const currentX = touch.clientX;
@@ -443,6 +531,10 @@ $(function () {
                 const deltaY = Math.abs(endY - startY);
                 const MOVE_THRESHOLD = 50;
                 
+                // 防止触发点击事件
+                e.preventDefault();
+                e.stopPropagation();
+                
                 // Always hide the delete buttons after a move attempt
                 hide();
                 
@@ -450,7 +542,20 @@ $(function () {
                 if (deltaX >= MOVE_THRESHOLD || deltaY >= MOVE_THRESHOLD) {
                     console.log("结束 >>>");
                     $('.app, .folder').removeClass('movable');
+                    // 移除编辑模式背景
+                    editModeBg.classList.remove('active');
                     longPressActivated = false;
+                    
+                    // 重新启用Swiper导航
+                    if (typeof swiper !== 'undefined') {
+                        swiper.allowTouchMove = true;
+                        swiper.params.touchReleaseOnEdges = true;
+                        swiper.params.threshold = 0;
+                        swiper.update();
+                    }
+                    
+                    // 恢复页面滚动
+                    document.body.style.overflow = '';
                 }
                 
                 cancelAnimationFrame(rafId);
@@ -597,11 +702,27 @@ $(function () {
                 folder.addEventListener("click", handleFolderInteraction);
                 folder.addEventListener("touchstart", handleFolderInteraction);
                 console.log("合并完成  >>>>");
+                
+                // 退出编辑模式
+                $('.app, .folder').removeClass('movable');
+                $('.delbook').removeClass('show');
+                editModeBg.classList.remove('active');
                 longPressActivated = false;
+                
+                // 重新启用Swiper导航
+                if (typeof swiper !== 'undefined') {
+                    swiper.allowTouchMove = true;
+                    swiper.params.touchReleaseOnEdges = true;
+                    swiper.params.threshold = 0;
+                    swiper.update();
+                }
+                
+                // 恢复页面滚动
+                document.body.style.overflow = '';
+                
                 saveLayout();
                 return folder;
             }
-
 
             function addToFolder(app, folder) {
                 const folderIcon = folder.querySelector(".folder-icon");
@@ -641,14 +762,29 @@ $(function () {
                     folder.addEventListener("touchstart", handleFolderInteraction);
 
                     console.log(`成功将应用 ${appId} 添加到文件夹`);
+                    
+                    // 退出编辑模式
+                    $('.app, .folder').removeClass('movable');
+                    $('.delbook').removeClass('show');
+                    editModeBg.classList.remove('active');
+                    longPressActivated = false;
+                    
+                    // 重新启用Swiper导航
+                    if (typeof swiper !== 'undefined') {
+                        swiper.allowTouchMove = true;
+                        swiper.params.touchReleaseOnEdges = true;
+                        swiper.params.threshold = 0;
+                        swiper.update();
+                    }
+                    
+                    // 恢复页面滚动
+                    document.body.style.overflow = '';
+                    
                     saveLayout();
                 } else {
                     console.log("文件夹已满，无法添加更多应用");
                 }
             }
-
-
-
 
             function swapElements(elem1, elem2) {
                 const rect1 = elem1.getBoundingClientRect();
@@ -681,11 +817,31 @@ $(function () {
                     elem2.style.transition = "";
                     elem1.removeEventListener("transitionend", onTransitionEnd);
                     saveLayout();
+                    
+                    // 在交换动画结束后，如果用户已退出编辑模式，恢复Swiper功能
+                    if (!longPressActivated) {
+                        // 重新启用Swiper导航
+                        if (typeof swiper !== 'undefined') {
+                            swiper.allowTouchMove = true;
+                            swiper.params.touchReleaseOnEdges = true;
+                            swiper.params.threshold = 0;
+                            swiper.update();
+                        }
+                        
+                        // 恢复页面滚动
+                        document.body.style.overflow = '';
+                    }
                 }
 
                 elem1.addEventListener("transitionend", onTransitionEnd);
                 draggedApp = null;
                 longPressActivated = false;
+                
+                // 退出编辑模式
+                $('.delbook').removeClass('show');
+                $('.app, .folder').removeClass('movable');
+                editModeBg.classList.remove('active');
+                
                 hide();
             }
 
@@ -698,13 +854,13 @@ $(function () {
 
             function hide() {
                 document.querySelectorAll(".delbook").forEach(delIcon => {
-                    delIcon.style.display = 'none';
+                    delIcon.classList.remove('show');
                 });
             }
 
             function show() {
                 document.querySelectorAll(".delbook").forEach(delIcon => {
-                    delIcon.style.display = 'block';
+                    delIcon.classList.add('show');
                 });
             }
 
@@ -850,4 +1006,4 @@ $(function () {
     }
 
     const bookMark = new bookMarkFn({data: store.get("page")});
-})
+});
