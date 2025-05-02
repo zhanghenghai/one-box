@@ -505,16 +505,25 @@ $(function () {
                     const otherElements = Array.from(desktop.querySelectorAll(".app, .folder")).filter(elem => elem !== draggedApp);
                     detectCollision(draggedApp, direction, otherElements, collisionElement => {
                         if (collisionElement) {
-                            if (draggedApp.classList.contains("app") && collisionElement.classList.contains("app")) {
+                            const draggedIsFolder = draggedApp.classList.contains("folder");
+                            const collisionIsFolder = collisionElement.classList.contains("folder");
+                            const draggedIsApp = draggedApp.classList.contains("app");
+                            const collisionIsApp = collisionElement.classList.contains("app");
+                            
+                            // 如果是应用与应用之间的hover停留，则创建文件夹
+                            if (draggedIsApp && collisionIsApp) {
+                                console.log("合并应用到文件夹");
                                 createFolder([draggedApp, collisionElement]);
-                            } else if (draggedApp.classList.contains("app") && collisionElement.classList.contains("folder")) {
-                                console.log(">>>>>添加了")
+                            } 
+                            // 如果是应用悬停在文件夹上，则添加到文件夹内部
+                            else if (draggedIsApp && collisionIsFolder) {
+                                console.log("添加应用到文件夹内部");
                                 addToFolder(draggedApp, collisionElement);
                             }
+                            // 其他情况不在这里处理，由detectCollision函数处理
                         }
                     });
                 }, 50);
-                //console.log(">>>>>>>> 这个是什么")
             }
 
             function handleEnd(e) {
@@ -584,7 +593,14 @@ $(function () {
 
             function detectCollision(draggedElement, direction, elements, callback) {
                 console.log(">>>>>>>>>检测碰撞");
-                const draggedRect = draggedElement.querySelector(".appClass .app-icon").getBoundingClientRect();
+                const draggedIsFolder = draggedElement.classList.contains("folder");
+                const draggedIsApp = draggedElement.classList.contains("app");
+                
+                // 获取拖动元素的边界矩形
+                const draggedRect = draggedIsFolder 
+                    ? draggedElement.querySelector(".folder-icon").getBoundingClientRect()
+                    : draggedElement.querySelector(".appClass .app-icon").getBoundingClientRect();
+                
                 const draggedCenter = {
                     x: draggedRect.left + draggedRect.width / 2,
                     y: draggedRect.top + draggedRect.height / 2
@@ -592,11 +608,15 @@ $(function () {
                 let closestElement;
 
                 elements.forEach(element => {
-                    const target = element.classList.contains("folder") ? element.querySelector(".folder-icon") : element.querySelector(".appClass");
+                    const isFolder = element.classList.contains("folder");
+                    const isApp = element.classList.contains("app");
+                    const target = isFolder ? element.querySelector(".folder-icon") : element.querySelector(".appClass");
                     const elementRect = target.getBoundingClientRect();
+                    
                     if (isColliding(draggedRect, elementRect)) {
                         console.log("满足碰撞条件");
                         let hasPassedCenter = false;
+                        
                         if (direction === 'left') {
                             if (draggedRect.right < elementRect.left + (elementRect.width / 2)) {
                                 hasPassedCenter = true;
@@ -606,12 +626,32 @@ $(function () {
                                 hasPassedCenter = true;
                             }
                         }
+                        
+                        // 如果已经越过中心点，判断是否执行交换
                         if (hasPassedCenter) {
                             console.log(`已超过目标元素中心的阈值，准备交换位置: ${direction}`);
-                            swapElements(draggedElement, element);
-                            return; // 交换后直接返回，避免重复处理
+                            
+                            // 处理两个文件夹之间的交换
+                            if (draggedIsFolder && isFolder) {
+                                console.log("文件夹与文件夹之间交换位置");
+                                swapElements(draggedElement, element);
+                                return; // 交换后直接返回，避免重复处理
+                            }
+                            // 应用与应用之间交换
+                            else if (draggedIsApp && isApp) {
+                                console.log("应用与应用之间交换位置");
+                                swapElements(draggedElement, element);
+                                return;
+                            }
+                            // 应用与文件夹之间交换
+                            else if (draggedIsApp && isFolder || draggedIsFolder && isApp) {
+                                console.log("应用与文件夹之间交换位置");
+                                swapElements(draggedElement, element);
+                                return;
+                            }
                         }
 
+                        // 在没有交换位置的情况下，检查是否满足APP添加到文件夹的条件
                         const elementCenter = {
                             x: elementRect.left + elementRect.width / 2,
                             y: elementRect.top + elementRect.height / 2
@@ -645,13 +685,14 @@ $(function () {
                 }
             }
 
-
             function isColliding(rectA, rectB) {
+                // 设置一个宽松的碰撞检测阈值，使拖拽操作更容易触发
+                const threshold = 5; // 5像素的碰撞边界宽松度
                 return !(
-                    rectA.right < rectB.left ||
-                    rectA.left > rectB.right ||
-                    rectA.bottom < rectB.top ||
-                    rectA.top > rectB.bottom
+                    rectA.right < rectB.left - threshold ||
+                    rectA.left > rectB.right + threshold ||
+                    rectA.bottom < rectB.top - threshold ||
+                    rectA.top > rectB.bottom + threshold
                 );
             }
 
@@ -787,24 +828,42 @@ $(function () {
             }
 
             function swapElements(elem1, elem2) {
+                // 先记录元素的原始位置信息
                 const rect1 = elem1.getBoundingClientRect();
                 const rect2 = elem2.getBoundingClientRect();
+                
+                // 保存元素是否是文件夹的信息，用于动画结束后的处理
+                const isFolder1 = elem1.classList.contains("folder");
+                const isFolder2 = elem2.classList.contains("folder");
+                console.log(`交换元素: ${isFolder1 ? '文件夹' : '应用'} <-> ${isFolder2 ? '文件夹' : '应用'}`);
+                
+                // 在DOM中交换元素位置
                 const tempElem = document.createElement("div");
                 elem1.parentNode.insertBefore(tempElem, elem1);
                 elem2.parentNode.insertBefore(elem1, elem2);
                 tempElem.parentNode.insertBefore(elem2, tempElem);
                 tempElem.parentNode.removeChild(tempElem);
+                
+                // 更新所有应用和文件夹的位置信息
                 updateAppPositions();
+                
+                // 计算位置偏移量
                 const deltaX1 = rect2.left - rect1.left;
                 const deltaY1 = rect2.top - rect1.top;
                 const deltaX2 = rect1.left - rect2.left;
                 const deltaY2 = rect1.top - rect2.top;
+                
+                // 应用位移
                 elem1.style.transform = `translate3d(${deltaX1}px, ${deltaY1}px, 0)`;
                 elem2.style.transform = `translate3d(${deltaX2}px, ${deltaY2}px, 0)`;
                 elem1.style.transition = "none";
                 elem2.style.transition = "none";
+                
+                // 强制刷新
                 elem1.offsetHeight;
                 elem2.offsetHeight;
+                
+                // 应用动画
                 requestAnimationFrame(() => {
                     elem1.style.transition = "transform 0.3s ease";
                     elem2.style.transition = "transform 0.3s ease";
@@ -813,9 +872,12 @@ $(function () {
                 });
 
                 function onTransitionEnd() {
+                    // 移除过渡样式
                     elem1.style.transition = "";
                     elem2.style.transition = "";
                     elem1.removeEventListener("transitionend", onTransitionEnd);
+                    
+                    // 保存更新后的布局
                     saveLayout();
                     
                     // 在交换动画结束后，如果用户已退出编辑模式，恢复Swiper功能
@@ -834,21 +896,27 @@ $(function () {
                 }
 
                 elem1.addEventListener("transitionend", onTransitionEnd);
-                draggedApp = null;
-                longPressActivated = false;
                 
-                // 退出编辑模式
-                $('.delbook').removeClass('show');
-                $('.app, .folder').removeClass('movable');
-                editModeBg.classList.remove('active');
+                // 重置拖拽状态
+                draggedApp = null;
+                
+                // 退出编辑模式（只在某些情况下）
+                if (isFolder1 && isFolder2) {
+                    // 文件夹与文件夹交换完成后退出编辑模式
+                    longPressActivated = false;
+                    $('.delbook').removeClass('show');
+                    $('.app, .folder').removeClass('movable');
+                    editModeBg.classList.remove('active');
+                }
                 
                 hide();
             }
 
             function updateAppPositions() {
-                const apps = document.querySelectorAll(".app");
-                apps.forEach((app) => {
-                    app.rect = app.getBoundingClientRect();
+                // 更新所有应用和文件夹的位置信息
+                const elements = document.querySelectorAll(".app, .folder");
+                elements.forEach((element) => {
+                    element.rect = element.getBoundingClientRect();
                 });
             }
 
