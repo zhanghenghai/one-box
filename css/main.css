@@ -252,7 +252,7 @@ body {
     position: relative;
 }
 
-/* 文字 */
+/* 统一的text样式 */
 .text {
     font-size: 15px;
     overflow: hidden;
@@ -261,6 +261,13 @@ body {
     color: #000000;
     text-shadow: 0 0 4px var(--white);
     padding: 7px 0 10px;
+    text-align: center;
+    width: 100%;
+    margin: 0;
+    height: 20px;
+    line-height: 20px;
+    box-sizing: border-box;
+    display: block;
 }
 
 /* 列表 */
@@ -1377,15 +1384,7 @@ body {
 
 /* 文件夹名称使用与app相同的text类 */
 .folder .text {
-    font-size: 15px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #000000;
-    text-shadow: 0 0 4px var(--white);
-    padding: 7px 0 10px;
-    text-align: center;
-    width: 100%;
+    /* 使用共享样式，此处不再设置 */
 }
 
 /* appClass样式与folderClass保持一致 */
@@ -1395,4 +1394,27 @@ body {
     align-items: center;
     width: 100%;
     height: auto;
+}
+
+/* 确保appClass和folderClass中的text样式完全一致 */
+.appClass .text,
+.folderClass .text {
+    /* 继承.text的统一样式 */
+    height: 20px !important;
+    line-height: 20px !important;
+    padding: 0 !important;
+    margin: 7px 0 10px !important;
+}
+
+/* 确保appClass和folderClass容器样式完全一致 */
+.appClass,
+.folderClass {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    min-height: 80px; /* 设置最小高度确保一致 */
+    justify-content: flex-start;
+    box-sizing: border-box;
 }

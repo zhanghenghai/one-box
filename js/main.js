@@ -769,6 +769,15 @@ $(function () {
                 document.body.style.overflow = '';
                 
                 saveLayout();
+                
+                // 统一当前文件夹中的text样式
+                setTimeout(() => {
+                    const textElements = folder.querySelectorAll('.text');
+                    textElements.forEach(element => {
+                        applyUniformTextStyle(element);
+                    });
+                }, 100);
+                
                 return folder;
             }
 
@@ -827,6 +836,14 @@ $(function () {
                     document.body.style.overflow = '';
                     
                     saveLayout();
+                    
+                    // 统一当前文件夹中的text样式
+                    setTimeout(() => {
+                        const textElements = folder.querySelectorAll('.text');
+                        textElements.forEach(element => {
+                            applyUniformTextStyle(element);
+                        });
+                    }, 100);
                 } else {
                     console.log("文件夹已满，无法添加更多应用");
                 }
@@ -1033,6 +1050,25 @@ $(function () {
                 });
             }
 
+            // 统一文本样式辅助函数 - 提取为独立函数以便重用
+            function applyUniformTextStyle(element) {
+                element.style.fontSize = '15px';
+                element.style.overflow = 'hidden';
+                element.style.textOverflow = 'ellipsis';
+                element.style.whiteSpace = 'nowrap';
+                element.style.color = '#000000';
+                element.style.textShadow = '0 0 4px white';
+                element.style.padding = '0';
+                element.style.margin = '7px 0 10px';
+                element.style.textAlign = 'center';
+                element.style.width = '100%';
+                element.style.height = '20px';
+                element.style.lineHeight = '20px';
+                element.style.boxSizing = 'border-box';
+                element.style.display = 'block';
+            }
+
+            // 修改createAppElement函数，确保应用创建时样式一致
             function createAppElement(appData) {
                 const app = document.createElement("div");
                 app.classList.add("app");
@@ -1046,6 +1082,13 @@ $(function () {
                         <div class="text">${appData.hl}</div>
                     </div>
                 `;
+                
+                // 确保文本样式一致
+                const textElement = app.querySelector('.text');
+                if (textElement) {
+                    applyUniformTextStyle(textElement);
+                }
+                
                 return app;
             }
 
@@ -1132,40 +1175,177 @@ $(function () {
         });
     }
     
-    // 在页面加载和修改后执行修复
-    setTimeout(fixExistingFolders, 1000);
+    // 确保所有text元素样式一致
+    function unifyTextStyles() {
+        const textElements = document.querySelectorAll('.text');
+        textElements.forEach(element => {
+            applyUniformTextStyle(element);
+        });
+        console.log('已统一所有text元素样式');
+    }
+
+    // 修改调用时机
+    setTimeout(fixExistingFolders, 800);
+    setTimeout(unifyTextStyles, 1500);
     
     const bookMark = new bookMarkFn({data: store.get("page")});
 });
 
-// 添加调试辅助函数
+// 添加调试辅助函数 - 已禁用
 function debugStructure() {
-    // 为appClass添加边框
-    const appClasses = document.querySelectorAll('.appClass');
-    appClasses.forEach(el => {
-        el.style.border = '1px solid blue';
-    });
-    
-    // 为folderClass添加边框
-    const folderClasses = document.querySelectorAll('.folderClass');
-    folderClasses.forEach(el => {
-        el.style.border = '1px solid red';
-    });
-    
-    // 为文件夹图标添加边框
-    const folderIcons = document.querySelectorAll('.folder-icon');
-    folderIcons.forEach(el => {
-        el.style.border = '1px dashed green';
-    });
-    
-    // 为应用图标添加边框
-    const appIcons = document.querySelectorAll('.app-icon');
-    appIcons.forEach(el => {
-        el.style.border = '1px dashed purple';
-    });
-    
-    console.log('调试模式：已添加边框以显示结构');
+    // 此函数已被禁用
+    console.log('调试结构函数已禁用');
 }
 
-// 在页面加载2秒后执行调试
-setTimeout(debugStructure, 2000);
+// 禁用调试函数的执行
+// setTimeout(debugStructure, 2000);
+
+// 检查并修复高度不一致的问题
+function checkAndFixHeights() {
+    // 获取所有应用和文件夹中的text元素
+    const appTexts = document.querySelectorAll('.appClass .text');
+    const folderTexts = document.querySelectorAll('.folderClass .text');
+    
+    // 收集应用text高度
+    let appTextHeights = [];
+    appTexts.forEach(text => {
+        const height = window.getComputedStyle(text).height;
+        appTextHeights.push(height);
+        // 立即强制应用统一样式
+        applyUniformTextStyle(text);
+    });
+    
+    // 收集文件夹text高度
+    let folderTextHeights = [];
+    folderTexts.forEach(text => {
+        const height = window.getComputedStyle(text).height;
+        folderTextHeights.push(height);
+        // 立即强制应用统一样式
+        applyUniformTextStyle(text);
+    });
+    
+    console.log('应用文本高度:', appTextHeights);
+    console.log('文件夹文本高度:', folderTextHeights);
+    
+    // 再次强制统一所有高度
+    const allTexts = document.querySelectorAll('.text');
+    allTexts.forEach(text => {
+        text.style.height = '20px';
+        text.style.lineHeight = '20px';
+        text.style.padding = '0';
+        text.style.margin = '7px 0 10px';
+        text.style.boxSizing = 'border-box';
+        text.style.display = 'block';
+    });
+    
+    console.log('已修复文本高度不一致问题');
+}
+
+// 添加到页面加载后的执行队列
+setTimeout(checkAndFixHeights, 1000);
+// 定期执行检查
+setInterval(checkAndFixHeights, 5000);
+
+// 添加高级调试功能 - 已禁用视觉标记
+function enhancedDebug() {
+    // 调试功能已禁用，不再添加任何视觉标记
+    console.log('视觉调试标记已禁用');
+}
+
+// 移除所有已添加的调试样式
+function removeDebugStyles() {
+    // 移除appClass上的调试样式
+    const appClasses = document.querySelectorAll('.appClass');
+    appClasses.forEach(el => {
+        el.style.border = '';
+        el.style.background = '';
+    });
+    
+    // 移除folderClass上的调试样式
+    const folderClasses = document.querySelectorAll('.folderClass');
+    folderClasses.forEach(el => {
+        el.style.border = '';
+        el.style.background = '';
+    });
+    
+    // 移除text元素上的调试样式
+    const textElements = document.querySelectorAll('.text');
+    textElements.forEach(el => {
+        el.style.border = '';
+        el.style.background = '';
+    });
+    
+    console.log('已移除所有调试视觉标记');
+}
+
+// 立即执行移除调试样式
+removeDebugStyles();
+// 禁用原有的调试定时执行
+// setTimeout(enhancedDebug, 3000);
+
+// 移除所有内联样式的调试标记
+function removeAllDebugStyles() {
+    // 获取所有页面元素
+    const allElements = document.querySelectorAll('*');
+    
+    // 检查并移除任何可能的调试样式
+    allElements.forEach(el => {
+        // 移除任何边框样式
+        if (el.style.border) {
+            el.style.border = '';
+        }
+        
+        // 移除任何背景颜色
+        if (el.style.background && 
+            (el.style.background.includes('rgba') || 
+             el.style.background.includes('rgb'))) {
+            el.style.background = '';
+        }
+        
+        // 移除任何位置样式(绝对定位等)
+        if (el.style.position === 'absolute' || 
+            el.style.position === 'relative') {
+            // 只有在确定这是调试添加的情况下才移除
+            if (el.getAttribute('data-debug-added')) {
+                el.style.position = '';
+            }
+        }
+        
+        // 移除z-index
+        if (parseInt(el.style.zIndex) > 900) {
+            el.style.zIndex = '';
+        }
+    });
+    
+    console.log('已彻底清除所有内联调试样式');
+}
+
+// 立即执行彻底清除
+removeAllDebugStyles();
+// 设置一个延迟执行，以防其他代码在之后添加样式
+setTimeout(removeAllDebugStyles, 1000);
+setTimeout(removeAllDebugStyles, 3000);
+
+// 添加一个立即执行的函数，在页面顶部阻止任何调试样式
+(function preventDebugStyles() {
+    // 覆盖可能用于添加调试样式的函数
+    window.debugStructure = function() {
+        console.log('调试结构函数已被阻止');
+        return false;
+    };
+    
+    // 添加一个样式表清除任何可能的调试边框
+    const style = document.createElement('style');
+    style.textContent = `
+        .appClass, .folderClass, .app-icon, .folder-icon {
+            border: none !important;
+            background-color: transparent !important;
+        }
+    `;
+    
+    // 在DOM准备好时添加样式
+    document.addEventListener('DOMContentLoaded', function() {
+        document.head.appendChild(style);
+        console.log('已添加防止调试样式的CSS规则');
+    });
+})();
