@@ -1050,24 +1050,6 @@ $(function () {
                 });
             }
 
-            // 统一文本样式辅助函数 - 提取为独立函数以便重用
-            function applyUniformTextStyle(element) {
-                element.style.fontSize = '15px';
-                element.style.overflow = 'hidden';
-                element.style.textOverflow = 'ellipsis';
-                element.style.whiteSpace = 'nowrap';
-                element.style.color = '#000000';
-                element.style.textShadow = '0 0 4px white';
-                element.style.padding = '0';
-                element.style.margin = '7px 0 10px';
-                element.style.textAlign = 'center';
-                element.style.width = '100%';
-                element.style.height = '20px';
-                element.style.lineHeight = '20px';
-                element.style.boxSizing = 'border-box';
-                element.style.display = 'block';
-            }
-
             // 修改createAppElement函数，确保应用创建时样式一致
             function createAppElement(appData) {
                 const app = document.createElement("div");
@@ -1199,6 +1181,24 @@ function debugStructure() {
 
 // 禁用调试函数的执行
 // setTimeout(debugStructure, 2000);
+
+// 统一文本样式辅助函数 - 放在全局作用域
+function applyUniformTextStyle(element) {
+    element.style.fontSize = '15px';
+    element.style.overflow = 'hidden';
+    element.style.textOverflow = 'ellipsis';
+    element.style.whiteSpace = 'nowrap';
+    element.style.color = '#000000';
+    element.style.textShadow = '0 0 4px white';
+    element.style.padding = '0';
+    element.style.margin = '7px 0 10px';
+    element.style.textAlign = 'center';
+    element.style.width = '100%';
+    element.style.height = '20px';
+    element.style.lineHeight = '20px';
+    element.style.boxSizing = 'border-box';
+    element.style.display = 'block';
+}
 
 // 检查并修复高度不一致的问题
 function checkAndFixHeights() {
