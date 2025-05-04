@@ -188,8 +188,8 @@ $(function () {
                                     const appIcon = document.createElement("div");
                                     appIcon.classList.add("app-icon");
                                     appIcon.style.backgroundImage = `url(${app.img})`;
-                                    appIcon.style.width = "16px";
-                                    appIcon.style.height = "16px";
+                                    appIcon.style.width = "15px";
+                                    appIcon.style.height = "15px";
                                     appIcon.style.backgroundSize = "contain";
                                     folderIcon.appendChild(appIcon);
                                     
@@ -729,8 +729,8 @@ $(function () {
                     if (!app.dataset.removed) {
                         const appElement = createAppElement(app);
                         const appIcon = appElement.querySelector(".app-icon").cloneNode(true);
-                        appIcon.style.width = "16px";
-                        appIcon.style.height = "16px";
+                        appIcon.style.width = "15px";
+                        appIcon.style.height = "15px";
                         appIcon.style.backgroundSize = "contain";
                         folderIcon.appendChild(appIcon);
                         folderContent.appendChild(appElement);
@@ -797,8 +797,8 @@ $(function () {
                 if (appIcons.length < 9) {
                     const appElement = createAppElement(app);
                     const appIcon = appElement.querySelector(".app-icon").cloneNode(true);
-                    appIcon.style.width = "16px";
-                    appIcon.style.height = "16px";
+                    appIcon.style.width = "15px";
+                    appIcon.style.height = "15px";
                     appIcon.style.backgroundSize = "contain";
 
                     folderIcon.appendChild(appIcon);
@@ -1010,8 +1010,8 @@ $(function () {
                         item.apps.slice(0, 9).forEach((app, index) => {
                             const appElement = createAppElement(app);
                             const appIcon = appElement.querySelector(".app-icon").cloneNode(true);
-                            appIcon.style.width = "16px";
-                            appIcon.style.height = "16px";
+                            appIcon.style.width = "15px";
+                            appIcon.style.height = "15px";
                             appIcon.style.backgroundSize = "contain";
                             folderIcon.appendChild(appIcon);
                             folderContent.appendChild(appElement);

@@ -73,8 +73,8 @@ body {
 
 .folder-icon .app-icon {
     position: relative;
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     font-size: 14px;
     background-size: contain;
     background-position: center;
@@ -1224,8 +1224,8 @@ body {
 
 /* 文件夹内部的应用图标 */
 .folder-icon .app-icon {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     font-size: 14px;
     background-size: contain;
     margin: 0;
