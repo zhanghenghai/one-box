@@ -17,24 +17,19 @@ function openFolder(folder) {
         folderPopup.style.top = `${(screenHeight - popupRect.height) / 2}px`;
         folderPopup.innerHTML = "";
         const folderContent = folder.querySelector(".folder-content");
-        Array.from(folderContent.children).forEach((app, index) => {
+        // 只显示前9个
+        Array.from(folderContent.children).slice(0, 9).forEach((app) => {
             const appClone = app.cloneNode(true);
+            // 不要用绝对定位，交给CSS grid布局
             appClone.style.cssText = "";
-            appClone.style.position = "absolute";
-            appClone.style.left = `${(index % 3) * 60}px`;
-            appClone.style.top = `${Math.floor(index / 3) * 60}px`;
             folderPopup.appendChild(appClone);
-            
-            // 为弹出窗口中的应用添加点击事件
+
+            // 点击事件
             appClone.addEventListener("click", function(e) {
                 e.stopPropagation();
                 if (!longPressActivated) {
-                    // 尝试多种方式获取URL
                     const url = this.dataset.url || this.getAttribute('data-url');
-                    console.log("点击弹窗内APP, URL:", url);
-                    if (url) {
-                        window.location.href = url;
-                    }
+                    if (url) window.location.href = url;
                 }
             });
         });
@@ -134,8 +129,10 @@ $(function () {
                     savedLayout.forEach(item => {
                         if (item.type === "folder") {
                             dataHtml += `<div class="folder" id="${item.id}">
-                                <div class="folder-icon">F</div>
-                                <div class="folder-name">Folder</div>
+                                <div class="folderClass">
+                                    <div class="folder-icon">F</div>
+                                    <div class="text">Folder</div>
+                                </div>
                                 <div class="folder-content"></div>
                                 <div class="folder-popup"></div>
                             </div>`;
@@ -162,11 +159,17 @@ $(function () {
                                 const folderContent = folderElement.querySelector(".folder-content");
                                 const folderPopup = folderElement.querySelector(".folder-popup");
                                 
+                                // 设置固定尺寸
+                                folderIcon.style.width = "50px";
+                                folderIcon.style.height = "50px";
+                                folderIcon.style.boxSizing = "border-box";
+                                folderIcon.style.padding = "0";
+                                
                                 // 清除默认的F图标
                                 folderIcon.textContent = '';
                                 
-                                // 添加应用到文件夹
-                                item.apps.forEach((app, index) => {
+                                // 只显示前9个APP图标
+                                item.apps.slice(0, 9).forEach((app, index) => {
                                     // 创建应用元素
                                     const appElement = document.createElement("div");
                                     appElement.classList.add("app");
@@ -185,11 +188,8 @@ $(function () {
                                     const appIcon = document.createElement("div");
                                     appIcon.classList.add("app-icon");
                                     appIcon.style.backgroundImage = `url(${app.img})`;
-                                    appIcon.style.position = "absolute";
-                                    appIcon.style.left = `${(index % 3) * 15}px`;
-                                    appIcon.style.top = `${Math.floor(index / 3) * 15}px`;
-                                    appIcon.style.width = "15px";
-                                    appIcon.style.height = "15px";
+                                    appIcon.style.width = "16px";
+                                    appIcon.style.height = "16px";
                                     appIcon.style.backgroundSize = "contain";
                                     folderIcon.appendChild(appIcon);
                                     
@@ -203,9 +203,7 @@ $(function () {
                                     appElement.addEventListener("click", function(e) {
                                         e.stopPropagation();
                                         if (!longPressActivated) {
-                                            // 尝试多种方式获取URL
                                             const url = this.dataset.url || this.getAttribute('data-url');
-                                            console.log("点击文件夹内APP, URL:", url);
                                             if (url) {
                                                 window.location.href = url;
                                             }
@@ -302,6 +300,9 @@ $(function () {
                     }
                 }
             });
+
+            // 在初始化完成后修复文件夹结构
+            setTimeout(fixExistingFolders, 300);
         },
         bind: function (i) {
             const desktopManager = initDesktopManager(`one${i}`);
@@ -598,8 +599,8 @@ $(function () {
                 
                 // 获取拖动元素的边界矩形
                 const draggedRect = draggedIsFolder 
-                    ? draggedElement.querySelector(".folder-icon").getBoundingClientRect()
-                    : draggedElement.querySelector(".appClass .app-icon").getBoundingClientRect();
+                    ? draggedElement.querySelector(".folderClass").getBoundingClientRect()
+                    : draggedElement.querySelector(".appClass").getBoundingClientRect();
                 
                 const draggedCenter = {
                     x: draggedRect.left + draggedRect.width / 2,
@@ -610,7 +611,7 @@ $(function () {
                 elements.forEach(element => {
                     const isFolder = element.classList.contains("folder");
                     const isApp = element.classList.contains("app");
-                    const target = isFolder ? element.querySelector(".folder-icon") : element.querySelector(".appClass");
+                    const target = isFolder ? element.querySelector(".folderClass") : element.querySelector(".appClass");
                     const elementRect = target.getBoundingClientRect();
                     
                     if (isColliding(draggedRect, elementRect)) {
@@ -701,12 +702,20 @@ $(function () {
                 folder.classList.add("folder");
                 folder.id = `folder-${Date.now()}`;
                 folder.innerHTML = `
-                    <div class="folder-icon">F</div>
-                    <div class="folder-name">Folder</div>
+                    <div class="folderClass">
+                        <div class="folder-icon">F</div>
+                        <div class="text">Folder</div>
+                    </div>
                     <div class="folder-content"></div>
                     <div class="folder-popup"></div>
                 `;
                 const folderIcon = folder.querySelector(".folder-icon");
+                // 设置固定尺寸
+                folderIcon.style.width = "50px";
+                folderIcon.style.height = "50px";
+                folderIcon.style.boxSizing = "border-box";
+                folderIcon.style.padding = "0";
+                
                 const folderContent = folder.querySelector(".folder-content");
                 const folderPopup = folder.querySelector(".folder-popup");
 
@@ -718,16 +727,14 @@ $(function () {
 
                 validApps.slice(0, 9).forEach((app, index) => {
                     if (!app.dataset.removed) {
-                        const appIcon = app.querySelector(".app-icon").cloneNode(true);
-                        const clonedApp = app.cloneNode(true);
-                        clonedApp.id = `cloned-${app.id}-${Date.now()}`;
-                        appIcon.style.left = `${(index % 3) * 15}px`;
-                        appIcon.style.top = `${Math.floor(index / 3) * 15}px`;
-                        appIcon.style.width = "15px";
-                        appIcon.style.height = "15px";
+                        const appElement = createAppElement(app);
+                        const appIcon = appElement.querySelector(".app-icon").cloneNode(true);
+                        appIcon.style.width = "16px";
+                        appIcon.style.height = "16px";
+                        appIcon.style.backgroundSize = "contain";
                         folderIcon.appendChild(appIcon);
-                        folderContent.appendChild(clonedApp);
-                        folderPopup.appendChild(clonedApp.cloneNode(true));
+                        folderContent.appendChild(appElement);
+                        folderPopup.appendChild(appElement.cloneNode(true));
                         if (app.parentNode) {
                             app.parentNode.removeChild(app);
                             app.dataset.removed = "true";
@@ -779,17 +786,15 @@ $(function () {
                 }
 
                 if (appIcons.length < 9) {
-                    const appIcon = app.querySelector(".app-icon").cloneNode(true);
-                    const clonedApp = app.cloneNode(true);
-                    clonedApp.id = `cloned-${app.id}-${Date.now()}`;
-                    appIcon.style.left = `${(appIcons.length % 3) * 15}px`;
-                    appIcon.style.top = `${Math.floor(appIcons.length / 3) * 15}px`;
-                    appIcon.style.width = "15px";
-                    appIcon.style.height = "15px";
+                    const appElement = createAppElement(app);
+                    const appIcon = appElement.querySelector(".app-icon").cloneNode(true);
+                    appIcon.style.width = "16px";
+                    appIcon.style.height = "16px";
+                    appIcon.style.backgroundSize = "contain";
 
                     folderIcon.appendChild(appIcon);
-                    folderContent.appendChild(clonedApp);
-                    folderPopup.appendChild(clonedApp.cloneNode(true));
+                    folderContent.appendChild(appElement);
+                    folderPopup.appendChild(appElement.cloneNode(true));
 
                     if (app.parentNode) {
                         app.parentNode.removeChild(app);
@@ -957,12 +962,21 @@ $(function () {
                         folder.classList.add("folder");
                         folder.id = item.id;
                         folder.innerHTML = `
-                            <div class="folder-icon">F</div>
-                            <div class="folder-name">Folder</div>
+                            <div class="folderClass">
+                                <div class="folder-icon">F</div>
+                                <div class="text">Folder</div>
+                            </div>
                             <div class="folder-content"></div>
                             <div class="folder-popup"></div>
                         `;
                         desktop.appendChild(folder);
+                        
+                        const folderIcon = folder.querySelector(".folder-icon");
+                        // 设置固定尺寸
+                        folderIcon.style.width = "50px";
+                        folderIcon.style.height = "50px";
+                        folderIcon.style.boxSizing = "border-box";
+                        folderIcon.style.padding = "0";
                         
                         // 为文件夹添加点击事件
                         folder.addEventListener("click", function(e) {
@@ -974,16 +988,14 @@ $(function () {
 
                         // 恢复文件夹中的应用
                         const folderContent = folder.querySelector(".folder-content");
-                        const folderIcon = folder.querySelector(".folder-icon");
                         const folderPopup = folder.querySelector(".folder-popup");
 
-                        item.apps.forEach((app, index) => {
+                        item.apps.slice(0, 9).forEach((app, index) => {
                             const appElement = createAppElement(app);
                             const appIcon = appElement.querySelector(".app-icon").cloneNode(true);
-                            appIcon.style.left = `${(index % 3) * 15}px`;
-                            appIcon.style.top = `${Math.floor(index / 3) * 15}px`;
-                            appIcon.style.width = "15px";
-                            appIcon.style.height = "15px";
+                            appIcon.style.width = "16px";
+                            appIcon.style.height = "16px";
+                            appIcon.style.backgroundSize = "contain";
                             folderIcon.appendChild(appIcon);
                             folderContent.appendChild(appElement);
                             folderPopup.appendChild(appElement.cloneNode(true));
@@ -1073,5 +1085,87 @@ $(function () {
         return api;
     }
 
+    // 修复现有文件夹结构
+    function fixExistingFolders() {
+        // 查找所有文件夹
+        const folders = document.querySelectorAll('.folder');
+        
+        folders.forEach(folder => {
+            // 检查是否已有folderClass
+            if (folder.querySelector('.folderClass')) {
+                return; // 已经修复过的跳过
+            }
+            
+            // 获取原始元素
+            const folderIcon = folder.querySelector('.folder-icon');
+            const folderName = folder.querySelector('.folder-name');
+            
+            if (folderIcon && folderName) {
+                // 创建folderClass包装元素
+                const folderClass = document.createElement('div');
+                folderClass.className = 'folderClass';
+                
+                // 将folderName改为text
+                const textElement = document.createElement('div');
+                textElement.className = 'text';
+                textElement.textContent = folderName.textContent;
+                
+                // 先从父元素中移除
+                folderIcon.parentNode.removeChild(folderIcon);
+                folderName.parentNode.removeChild(folderName);
+                
+                // 添加到folderClass中
+                folderClass.appendChild(folderIcon);
+                folderClass.appendChild(textElement);
+                
+                // 添加到文件夹的开头
+                folder.insertBefore(folderClass, folder.firstChild);
+                
+                // 设置固定尺寸
+                folderIcon.style.width = "50px";
+                folderIcon.style.height = "50px";
+                folderIcon.style.boxSizing = "border-box";
+                folderIcon.style.padding = "0";
+                
+                console.log("修复了一个文件夹结构");
+            }
+        });
+    }
+    
+    // 在页面加载和修改后执行修复
+    setTimeout(fixExistingFolders, 1000);
+    
     const bookMark = new bookMarkFn({data: store.get("page")});
 });
+
+// 添加调试辅助函数
+function debugStructure() {
+    // 为appClass添加边框
+    const appClasses = document.querySelectorAll('.appClass');
+    appClasses.forEach(el => {
+        el.style.border = '1px solid blue';
+    });
+    
+    // 为folderClass添加边框
+    const folderClasses = document.querySelectorAll('.folderClass');
+    folderClasses.forEach(el => {
+        el.style.border = '1px solid red';
+    });
+    
+    // 为文件夹图标添加边框
+    const folderIcons = document.querySelectorAll('.folder-icon');
+    folderIcons.forEach(el => {
+        el.style.border = '1px dashed green';
+    });
+    
+    // 为应用图标添加边框
+    const appIcons = document.querySelectorAll('.app-icon');
+    appIcons.forEach(el => {
+        el.style.border = '1px dashed purple';
+    });
+    
+    console.log('调试模式：已添加边框以显示结构');
+}
+
+// 在页面加载2秒后执行调试
+setTimeout(debugStructure, 2000);
